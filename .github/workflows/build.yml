@@ -24,6 +24,9 @@ jobs:
             src/com/sun/jna/win32/*.java
           ls build/native/*.h
 
+      - name: Install autotools for libffi
+        run: brew install autoconf automake libtool
+
       - name: Cross-compile libjnidispatch for iOS arm64 with JNA_JNI_VERSION=6.1.6
         run: |
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)

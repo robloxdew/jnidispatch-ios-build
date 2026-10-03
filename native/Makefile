@@ -415,7 +415,7 @@ JAVA_INCLUDES+=-I/System/Library/Frameworks/JavaVM.framework/Headers
 MACOSX_DEPLOYMENT_TARGET=10.3
 DEFAULT_ARCH=$(shell arch)
 HOST_CONFIG=--host $(DARWIN_ARCH)-apple-darwin
-FFI_ENV += CC="$(CC)" CFLAGS="-mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET) -arch $(DARWIN_ARCH) $(ISYSROOT) $(COPT) $(CDEBUG)" CPPFLAGS="$(CDEFINES)" LD="$(LD) -arch $(DARWIN_ARCH)"
+FFI_ENV += CC="$(CC)" CFLAGS="$(MIN_VERSION_FLAG) -arch $(DARWIN_ARCH) $(ISYSROOT) $(COPT) $(CDEBUG)" CPPFLAGS="$(CDEFINES)" LD="$(LD) -arch $(DARWIN_ARCH)"
 LIBSFX=.dylib
 JNISFX=.jnilib
 # JAWT no longer supported on OSX
@@ -433,6 +433,14 @@ ISYSROOT=-isysroot $(SDKROOT)
 ARCHFLAGS+=-arch $(DARWIN_ARCH)
 endif
 
+# iOS support: use -miphoneos-version-min when building against an iPhoneOS sysroot
+ifneq ($(findstring iPhoneOS,$(SDKROOT)),)
+MIN_VERSION_FLAG=-miphoneos-version-min=$(IOS_MIN_VERSION)
+IOS_MIN_VERSION ?= 14.0
+else
+MIN_VERSION_FLAG=-mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)
+endif
+
 PCFLAGS+=$(ISYSROOT) -x objective-c
 
 # MAJOR < 10 || (MAJOR = 10 && MINOR < 7)
@@ -446,7 +454,7 @@ endif
 LDFLAGS=$(ARCHFLAGS) -dynamiclib -o $@ $(FRAMEWORK) \
   -compatibility_version $(shell echo ${JNA_JNI_VERSION}|sed 's/^\([0-9][0-9]*\).*/\1/g') \
   -current_version $(JNA_JNI_VERSION) \
-  -mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET) \
+  $(MIN_VERSION_FLAG) \
   -framework Foundation \
   $(NO_COMPACT_UNWIND) \
   -install_name ${@F} \
@@ -461,7 +469,7 @@ endif
 $(BUILD)/%.o : %.c dispatch.h protect.h $(FFI_LIB)
 	@mkdir -p $(BUILD)
 ifneq ($(SDKROOT),)
-	$(CC) $(LOC_CC_OPTS) -mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET) -arch $(DARWIN_ARCH) $(CFLAGS) -c $< -o $@
+	$(CC) $(LOC_CC_OPTS) $(MIN_VERSION_FLAG) -arch $(DARWIN_ARCH) $(CFLAGS) -c $< -o $@
 else
 	$(CC) $(CFLAGS) $(LOC_CC_OPTS) -c $< $(COUT)
 endif

@@ -33,6 +33,7 @@ jobs:
           echo "iOS SDK: $SDK"
           cd native
           make JNA_JNI_VERSION=6.1.6 ARCH=aarch64 SDKROOT="$SDK" JNISFX=.dylib MAKEINFO=true \
+            LOC_CC_OPTS="-Wno-unknown-warning-option -Wno-clobbered -Wno-unused-variable -Wno-error" \
             ../build/native/libjnidispatch.dylib
           cd ..
           file build/native/libjnidispatch.dylib

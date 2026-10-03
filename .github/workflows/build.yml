@@ -1,0 +1,51 @@
+name: build-jnidispatch-ios
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Generate javah headers (same as ant javah)
+        run: |
+          mkdir -p build/native build/classes
+          javac -d build/classes -h build/native \
+            src/com/sun/jna/*.java \
+            src/com/sun/jna/internal/*.java \
+            src/com/sun/jna/win32/*.java
+          ls build/native/*.h
+
+      - name: Cross-compile libjnidispatch for iOS arm64 (KEY: JNA_JNI_VERSION=6.1.6)
+        run: |
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path)
+          echo "iOS SDK: $SDK"
+          cd native
+          make JNA_JNI_VERSION=6.1.6 ARCH=aarch64 SDKROOT="$SDK" JNISFX=.dylib \
+            ../build/native/libjnidispatch.dylib
+          cd ..
+          file build/native/libjnidispatch.dylib
+          echo "--- version check ---"
+          strings build/native/libjnidispatch.dylib | grep -E "^6\.1\.6$" || exit 1
+
+      - name: Tag Mach-O as iOS platform
+        run: |
+          cd build/native
+          vtool -arch arm64 -set-build-version 2 14.0 16.0 -replace \
+            -output libjnidispatch-ios.dylib libjnidispatch.dylib \
+            || cp libjnidispatch.dylib libjnidispatch-ios.dylib
+          file libjnidispatch-ios.dylib
+          ls -la libjnidispatch-ios.dylib
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libjnidispatch-ios-arm64-6.1.6
+          path: build/native/libjnidispatch-ios.dylib

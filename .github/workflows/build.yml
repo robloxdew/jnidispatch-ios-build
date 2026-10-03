@@ -24,7 +24,7 @@ jobs:
             src/com/sun/jna/win32/*.java
           ls build/native/*.h
 
-      - name: Cross-compile libjnidispatch for iOS arm64 (KEY: JNA_JNI_VERSION=6.1.6)
+      - name: Cross-compile libjnidispatch for iOS arm64 with JNA_JNI_VERSION=6.1.6
         run: |
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           echo "iOS SDK: $SDK"

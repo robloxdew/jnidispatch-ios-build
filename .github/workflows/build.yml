@@ -32,7 +32,7 @@ jobs:
           SDK=$(xcrun --sdk iphoneos --show-sdk-path)
           echo "iOS SDK: $SDK"
           cd native
-          make JNA_JNI_VERSION=6.1.6 ARCH=aarch64 SDKROOT="$SDK" JNISFX=.dylib \
+          make JNA_JNI_VERSION=6.1.6 ARCH=aarch64 SDKROOT="$SDK" JNISFX=.dylib MAKEINFO=true \
             ../build/native/libjnidispatch.dylib
           cd ..
           file build/native/libjnidispatch.dylib
